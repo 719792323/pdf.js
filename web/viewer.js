@@ -132,6 +132,11 @@ function getViewerConfiguration() {
       viewsManagerHeaderLabel: document.getElementById(
         "viewsManagerHeaderLabel"
       ),
+      popOutOutlineButton: document.getElementById("popOutOutlineButton"),
+    },
+    floatingOutline: {
+      container: document.getElementById("floatingOutlineContainer"),
+      outlinesView: document.getElementById("outlinesView"),
     },
     findBar: {
       bar: document.getElementById("findbar"),

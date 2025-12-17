@@ -91,6 +91,7 @@ import { PDFScriptingManager } from "./pdf_scripting_manager.js";
 import { PdfTextExtractor } from "./pdf_text_extractor.js";
 import { PDFThumbnailViewer } from "web-pdf_thumbnail_viewer";
 import { PDFViewer } from "./pdf_viewer.js";
+import { FloatingOutline } from "./floating_outline.js";
 import { Preferences } from "web-preferences";
 import { SecondaryToolbar } from "web-secondary_toolbar";
 import { SignatureManager } from "web-signature_manager";
@@ -776,6 +777,28 @@ const PDFViewerApplication = {
           pdfViewer.currentPageNumber
         );
       };
+    }
+
+    // 初始化浮动书签面板
+    if (appConfig.floatingOutline) {
+      this.floatingOutline = new FloatingOutline({
+        container: appConfig.floatingOutline.container,
+        outlineView: appConfig.floatingOutline.outlinesView,
+        eventBus,
+        viewerContainer: appConfig.viewerContainer,
+      });
+
+      // 双击PDF界面切换书签显示/隐藏
+      appConfig.viewerContainer?.addEventListener("dblclick", e => {
+        // 确保不是点击在书签面板上
+        if (!e.target.closest("#floatingOutlineContainer")) {
+          eventBus.dispatch("togglefloatingoutline", {
+            source: this,
+            mouseX: e.clientX,
+            mouseY: e.clientY,
+          });
+        }
+      });
     }
   },
 
