@@ -54,9 +54,8 @@
   --toolbar-border-color: light-dark(rgb(184 184 184), rgb(12 12 13));
   --toolbar-box-shadow: 0 1px 0 var(--toolbar-border-color);
   --toolbar-border-bottom: none;
-  --toolbarSidebar-box-shadow:
-    inset calc(-1px * var(--dir-factor)) 0 0 rgb(0 0 0 / 0.25),
-    0 1px 0 rgb(0 0 0 / 0.15), 0 0 1px rgb(0 0 0 / 0.1);
+  --toolbarSidebar-box-shadow: inset calc(-1px * var(--dir-factor)) 0 0 rgb(0 0 0 / 0.25),
+  0 1px 0 rgb(0 0 0 / 0.15), 0 0 1px rgb(0 0 0 / 0.1);
   --toolbarSidebar-border-bottom: none;
   --button-hover-color: color-mix(in srgb, currentColor 17%, transparent);
   --toggled-btn-color: light-dark(rgb(0 0 0), rgb(255 255 255));
@@ -187,6 +186,7 @@ html {
   &[data-toolbar-density="compact"] {
     --toolbar-height: 30px;
   }
+
   &[data-toolbar-density="touch"] {
     --toolbar-height: 44px;
   }
@@ -344,9 +344,8 @@ body {
 .doorHanger,
 .doorHangerRight {
   border-radius: 2px;
-  box-shadow:
-    0 1px 5px var(--doorhanger-border-color),
-    0 0 0 1px var(--doorhanger-border-color);
+  box-shadow: 0 1px 5px var(--doorhanger-border-color),
+  0 0 0 1px var(--doorhanger-border-color);
   border: var(--doorhanger-border-color-whcm);
   background-color: var(--doorhanger-bg-color);
   inset-block-start: calc(100% + var(--doorhanger-height) - 2px);
@@ -587,9 +586,11 @@ body {
   transition-property: none;
 
   /*#if !MOZCENTRAL*/
+
   &::-webkit-inner-spin-button {
     -webkit-appearance: none;
   }
+
   /*#endif*/
 
   .loadingInput:has(> &.loading)::after {
@@ -625,6 +626,7 @@ body {
     inset-inline-end: 4px;
   }
 }
+
 #outlineOptionsContainer {
   display: none;
 
@@ -726,7 +728,7 @@ dialog :link {
 }
 
 .grab-to-pan-grab
-  *:not(input):not(textarea):not(button):not(select):not(:link) {
+*:not(input):not(textarea):not(button):not(select):not(:link) {
   cursor: inherit !important;
 }
 
@@ -742,6 +744,12 @@ dialog :link {
   inset: 0;
   overflow: hidden;
   z-index: 50000; /* should be higher than anything else in PDF.js! */
+}
+
+#outlineFollowMouseToggle {
+  &::before {
+    border-radius: 15px;
+  }
 }
 
 .toolbarButton {
@@ -777,6 +785,7 @@ dialog :link {
     background-color: var(--toolbar-icon-bg-color);
     mask-size: cover;
     mask-position: center;
+    /*border-radius: 15px;*/
   }
 
   &.toggled {
@@ -865,7 +874,7 @@ dialog :link {
     height: auto;
     max-height: calc(
       var(--viewer-container-height) - var(--toolbar-height) -
-        var(--doorhanger-height)
+      var(--doorhanger-height)
     );
     display: flex;
     flex-direction: column;
@@ -937,15 +946,17 @@ dialog :link {
         }
 
         /*#if !MOZCENTRAL*/
+
         &::-webkit-slider-runnable-track,
-        /*#endif*/
+          /*#endif*/
         &::-moz-range-track {
           background-color: black;
         }
 
         /*#if !MOZCENTRAL*/
+
         &::-webkit-slider-thumb,
-        /*#endif*/
+          /*#endif*/
         &::-moz-range-thumb {
           background-color: white;
         }
@@ -965,9 +976,11 @@ dialog :link {
 
   #secondaryToolbarButtonContainer {
     /*#if GENERIC*/
+
     #secondaryOpenFile::before {
       mask-image: var(--toolbarButton-openFile-icon);
     }
+
     /*#endif*/
 
     #secondaryPrint::before {
@@ -1087,10 +1100,13 @@ dialog :link {
       padding: 5px var(--input-horizontal-padding);
 
       /*#if !MOZCENTRAL*/
+
       &::-webkit-input-placeholder {
         color: rgb(191 191 191);
       }
+
       /*#endif*/
+
       &::placeholder {
         font-style: normal;
       }
@@ -1433,6 +1449,7 @@ dialog :link {
   #sidebarContainer {
     background-color: var(--sidebar-narrow-bg-color);
   }
+
   #outerContainer.viewsManagerOpen #viewerContainer {
     inset-inline-start: 0 !important;
   }
@@ -1442,6 +1459,7 @@ dialog :link {
   #outerContainer .hiddenMediumView {
     display: none !important;
   }
+
   #outerContainer .visibleMediumView:not(.hidden, [hidden]) {
     display: inline-block !important;
   }
