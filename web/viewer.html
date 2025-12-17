@@ -42,6 +42,7 @@ See https://github.com/adobe-type-tools/cmap-resources
     <!--<link rel="localization" href="toolkit/pdfviewer/viewer.ftl"/>-->
     <!--#else-->
     <link rel="stylesheet" href="viewer.css" />
+    <link rel="stylesheet" href="floating_outline.css" />
     <!--#endif-->
 
     <!--#if MOZCENTRAL-->
@@ -184,6 +185,16 @@ See https://github.com/adobe-type-tools/cmap-resources
                         hidden="true"
                       >
                         <span data-l10n-id="pdfjs-current-outline-item-button-label"></span>
+                      </button>
+                      <button
+                        id="popOutOutlineButton"
+                        class="toolbarButton viewsManagerButton"
+                        type="button"
+                        tabindex="0"
+                        title="弹出书签面板"
+                        hidden="true"
+                      >
+                        <span>弹出</span>
                       </button>
                     </div>
                     <div id="viewsManagerStatus">
@@ -399,6 +410,15 @@ See https://github.com/adobe-type-tools/cmap-resources
                 </span>
               </div>
               <div id="toolbarViewerRight" class="toolbarHorizontalGroup">
+                <button
+                  id="outlineFollowMouseToggle"
+                  class="toolbarButton"
+                  type="button"
+                  tabindex="0"
+                  title="书签跟随鼠标"
+                >
+                  <span>📍</span>
+                </button>
                 <div id="editorModeButtons" class="toolbarHorizontalGroup">
                   <div id="editorComment" class="toolbarButtonWithContainer" hidden="true">
                     <button
@@ -1286,6 +1306,26 @@ See https://github.com/adobe-type-tools/cmap-resources
       <!-- editorUndoBar -->
     </div>
     <!-- outerContainer -->
+
+    <!-- 浮动书签面板 -->
+    <div id="floatingOutlineContainer" class="hidden">
+      <div class="floatingOutlineHeader">
+        <span class="floatingOutlineTitle" data-l10n-id="pdfjs-document-outline-button-label">书签</span>
+        <button class="floatingOutlineCloseButton" type="button" title="关闭"></button>
+      </div>
+      <div class="floatingOutlineContent"></div>
+      <!-- 调整大小手柄 -->
+      <div class="floatingOutlineResizer resizer-n" data-direction="n"></div>
+      <div class="floatingOutlineResizer resizer-s" data-direction="s"></div>
+      <div class="floatingOutlineResizer resizer-e" data-direction="e"></div>
+      <div class="floatingOutlineResizer resizer-w" data-direction="w"></div>
+      <div class="floatingOutlineResizer resizer-ne" data-direction="ne"></div>
+      <div class="floatingOutlineResizer resizer-nw" data-direction="nw"></div>
+      <div class="floatingOutlineResizer resizer-se" data-direction="se"></div>
+      <div class="floatingOutlineResizer resizer-sw" data-direction="sw"></div>
+    </div>
+    <!-- floatingOutlineContainer -->
+
     <div id="printContainer"></div>
   </body>
 </html>

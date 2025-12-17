@@ -91,6 +91,7 @@ class ViewsManager extends Sidebar {
       viewsManagerSelectorButton,
       viewsManagerSelectorOptions,
       viewsManagerHeaderLabel,
+      popOutOutlineButton,
     },
     eventBus,
     l10n,
@@ -133,6 +134,7 @@ class ViewsManager extends Sidebar {
 
     this.viewsManagerCurrentOutlineButton = viewsManagerCurrentOutlineButton;
     this.viewsManagerHeaderLabel = viewsManagerHeaderLabel;
+    this.popOutOutlineButton = popOutOutlineButton;
 
     this.eventBus = eventBus;
 
@@ -166,6 +168,9 @@ class ViewsManager extends Sidebar {
       this.layersButton.disabled =
         false;
     this.viewsManagerCurrentOutlineButton.disabled = true;
+    if (this.popOutOutlineButton) {
+      this.popOutOutlineButton.disabled = true;
+    }
   }
 
   /**
@@ -247,6 +252,9 @@ class ViewsManager extends Sidebar {
     }
 
     this.viewsManagerCurrentOutlineButton.hidden = view !== SidebarView.OUTLINE;
+    if (this.popOutOutlineButton) {
+      this.popOutOutlineButton.hidden = view !== SidebarView.OUTLINE;
+    }
     this.viewsManagerHeaderLabel.setAttribute(
       "data-l10n-id",
       ViewsManager.#l10nDescription[titleL10nId] || ""
@@ -426,6 +434,13 @@ class ViewsManager extends Sidebar {
       eventBus.dispatch("currentoutlineitem", { source: this });
     });
 
+    // 弹出书签按钮点击事件
+    if (this.popOutOutlineButton) {
+      this.popOutOutlineButton.addEventListener("click", () => {
+        eventBus.dispatch("popoutoutline", { source: this });
+      });
+    }
+
     // Disable/enable views.
     const onTreeLoaded = (count, button, view) => {
       button.disabled = !count;
@@ -441,6 +456,11 @@ class ViewsManager extends Sidebar {
 
     eventBus._on("outlineloaded", evt => {
       onTreeLoaded(evt.outlineCount, this.outlineButton, SidebarView.OUTLINE);
+
+      // 启用弹出书签按钮
+      if (this.popOutOutlineButton) {
+        this.popOutOutlineButton.disabled = !evt.outlineCount;
+      }
 
       evt.currentOutlineItemPromise.then(enabled => {
         if (!this.isInitialViewSet) {

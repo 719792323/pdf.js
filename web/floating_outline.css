@@ -1,0 +1,339 @@
+/* Copyright 2024 Mozilla Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/* 浮动书签面板样式 */
+#floatingOutlineContainer {
+  --floating-outline-bg: light-dark(rgb(255 255 255 / 0.98), rgb(35 34 43 / 0.98));
+  --floating-outline-header-bg: light-dark(rgb(240 240 244), rgb(43 42 51));
+  --floating-outline-border: light-dark(rgb(0 0 0 / 0.15), rgb(255 255 255 / 0.15));
+  --floating-outline-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  --floating-outline-text: light-dark(#15141a, #fbfbfe);
+  --floating-outline-close-hover: light-dark(rgb(0 0 0 / 0.1), rgb(255 255 255 / 0.1));
+  --floating-outline-resizer-color: light-dark(rgb(0 98 250 / 0.5), rgb(0 202 219 / 0.5));
+
+  position: fixed;
+  z-index: 10000;
+  min-width: 200px;
+  min-height: 150px;
+  max-width: 80vw;
+  max-height: 80vh;
+  background: var(--floating-outline-bg);
+  border: 1px solid var(--floating-outline-border);
+  border-radius: 8px;
+  box-shadow: var(--floating-outline-shadow);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+
+  &.hidden {
+    display: none;
+  }
+
+  &.visible {
+    display: flex;
+  }
+
+  &.dragging {
+    user-select: none;
+    cursor: grabbing;
+    opacity: 0.9;
+  }
+
+  &.resizing {
+    user-select: none;
+  }
+}
+
+/* 浮动面板头部 */
+.floatingOutlineHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--floating-outline-header-bg);
+  border-bottom: 1px solid var(--floating-outline-border);
+  cursor: grab;
+  user-select: none;
+  flex-shrink: 0;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.floatingOutlineTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--floating-outline-text);
+  margin: 0;
+  flex: 1;
+}
+
+/* 关闭按钮 */
+.floatingOutlineCloseButton {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--floating-outline-text);
+  transition: background-color 0.15s ease;
+
+  &:hover {
+    background: var(--floating-outline-close-hover);
+  }
+
+  &::before {
+    content: "×";
+    font-size: 18px;
+    line-height: 1;
+  }
+}
+
+/* 浮动面板内容区域 */
+.floatingOutlineContent {
+  flex: 1;
+  overflow: auto;
+  padding: 8px;
+
+  /* 继承原有的treeView样式 */
+  .treeItem {
+    padding: 2px 0;
+  }
+
+  .treeItem > a {
+    text-decoration: none;
+    display: inline-block;
+    min-width: calc(100% - 4px);
+    height: auto;
+    margin-bottom: 1px;
+    padding: 2px 4px;
+    border-radius: 4px;
+    color: var(--floating-outline-text);
+    font-size: 14px;
+    line-height: 1.4;
+    user-select: none;
+    cursor: pointer;
+    vertical-align: middle;
+
+    &:hover {
+      background: var(--floating-outline-close-hover);
+    }
+  }
+
+  .treeItems {
+    margin-inline-start: 16px;
+  }
+
+  /* 展开/折叠按钮 */
+  .treeItemToggler {
+    position: relative;
+    height: 22px;
+    width: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    vertical-align: middle;
+
+    &::before {
+      content: "";
+      display: inline-block;
+      width: 0;
+      height: 0;
+      border-width: 5px;
+      border-style: solid;
+      border-color: transparent transparent transparent var(--floating-outline-text);
+      transition: transform 0.15s ease;
+    }
+
+    &.treeItemsHidden::before {
+      transform: rotate(0deg);
+    }
+
+    &:not(.treeItemsHidden)::before {
+      transform: rotate(90deg);
+    }
+  }
+
+  .treeItemsHidden ~ .treeItems {
+    display: none;
+  }
+}
+
+/* 调整大小手柄 */
+.floatingOutlineResizer {
+  position: absolute;
+  background: transparent;
+  z-index: 10;
+
+  &.resizer-n {
+    top: -4px;
+    left: 8px;
+    right: 8px;
+    height: 8px;
+    cursor: n-resize;
+  }
+
+  &.resizer-s {
+    bottom: -4px;
+    left: 8px;
+    right: 8px;
+    height: 8px;
+    cursor: s-resize;
+  }
+
+  &.resizer-e {
+    right: -4px;
+    top: 8px;
+    bottom: 8px;
+    width: 8px;
+    cursor: e-resize;
+  }
+
+  &.resizer-w {
+    left: -4px;
+    top: 8px;
+    bottom: 8px;
+    width: 8px;
+    cursor: w-resize;
+  }
+
+  &.resizer-ne {
+    top: -4px;
+    right: -4px;
+    width: 12px;
+    height: 12px;
+    cursor: ne-resize;
+  }
+
+  &.resizer-nw {
+    top: -4px;
+    left: -4px;
+    width: 12px;
+    height: 12px;
+    cursor: nw-resize;
+  }
+
+  &.resizer-se {
+    bottom: -4px;
+    right: -4px;
+    width: 12px;
+    height: 12px;
+    cursor: se-resize;
+  }
+
+  &.resizer-sw {
+    bottom: -4px;
+    left: -4px;
+    width: 12px;
+    height: 12px;
+    cursor: sw-resize;
+  }
+
+  &:hover {
+    background: var(--floating-outline-resizer-color);
+  }
+}
+
+/* 右键菜单 */
+.floatingOutlineContextMenu {
+  position: fixed;
+  z-index: 10001;
+  background: var(--floating-outline-bg, rgb(255 255 255 / 0.98));
+  border: 1px solid var(--floating-outline-border, rgb(0 0 0 / 0.15));
+  border-radius: 6px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  padding: 4px 0;
+  min-width: 120px;
+
+  &.hidden {
+    display: none;
+  }
+}
+
+.contextMenuItem {
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 13px;
+  color: light-dark(#15141a, #fbfbfe);
+  transition: background-color 0.15s ease;
+
+  &:hover {
+    background: light-dark(rgb(0 0 0 / 0.08), rgb(255 255 255 / 0.08));
+  }
+}
+
+/* 弹出书签按钮 */
+#popOutOutlineButton {
+  --popout-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='currentColor' d='M2 2v12h12V2H2zm1 1h4v4H3V3zm5 0h5v10H8V3zM3 8h4v6H3V8z'/%3E%3C/svg%3E");
+
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-inline-start: 8px;
+
+  &::before {
+    content: "";
+    width: 16px;
+    height: 16px;
+    mask-image: var(--popout-icon);
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    background-color: currentColor;
+  }
+
+  &:hover {
+    background: light-dark(rgb(0 0 0 / 0.1), rgb(255 255 255 / 0.1));
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+/* 工具栏上的书签跟随鼠标开关按钮 */
+#outlineFollowMouseToggle {
+  position: relative;
+
+  &.toggled {
+    background: light-dark(rgb(0 98 250 / 0.2), rgb(0 202 219 / 0.3));
+    border-radius: 4px;
+  }
+
+  &.toggled::after {
+    content: "";
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 16px;
+    height: 2px;
+    background: light-dark(rgb(0 98 250), rgb(0 202 219));
+    border-radius: 1px;
+  }
+}
