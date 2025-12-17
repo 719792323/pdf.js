@@ -293,10 +293,10 @@ class FloatingOutline {
     this.#container.classList.remove("hidden");
     this.#container.classList.add("visible");
     this.#isFloating = true;
-
+    // 书签初始尺寸
     // 使用保存的尺寸或默认尺寸
-    const panelWidth = this.#hasSavedState ? this.#savedWidth : 300;
-    const panelHeight = this.#hasSavedState ? this.#savedHeight : 400;
+    const panelWidth = this.#hasSavedState ? this.#savedWidth : 500;
+    const panelHeight = this.#hasSavedState ? this.#savedHeight : 600;
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
 
@@ -311,8 +311,9 @@ class FloatingOutline {
       left = this.#savedLeft;
       top = this.#savedTop;
     } else {
-      // 默认位置：屏幕中心偏右
-      left = (viewportWidth - panelWidth) / 2 + 200;
+      // 书签默认位置：屏幕中心偏座
+      left = (viewportWidth - panelWidth) / 6;
+      // left = 50;
       top = (viewportHeight - panelHeight) / 2;
     }
 
