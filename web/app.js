@@ -1533,8 +1533,10 @@ const PDFViewerApplication = {
           let spreadMode = AppOptions.get("spreadModeOnLoad");
 
           if (stored?.page && viewOnLoad !== ViewOnLoad.INITIAL) {
+            // 优先使用 defaultZoomValue 配置，如果没有才使用历史存储的 zoom
+            const zoomValue = zoom || stored.zoom;
             hash =
-              `page=${stored.page}&zoom=${zoom || stored.zoom},` +
+              `page=${stored.page}&zoom=${zoomValue},` +
               `${stored.scrollLeft},${stored.scrollTop}`;
 
             rotation = parseInt(stored.rotation, 10);

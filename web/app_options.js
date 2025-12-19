@@ -198,8 +198,8 @@ const defaultOptions = {
   },
   defaultZoomValue: {
     /** @type {string} */
-    value: "",
-    kind: OptionKind.VIEWER + OptionKind.PREFERENCE,
+    value: "page-width",
+    kind: OptionKind.VIEWER,
   },
   disableHistory: {
     /** @type {boolean} */
@@ -359,7 +359,7 @@ const defaultOptions = {
   },
   sidebarViewOnLoad: {
     /** @type {number} */
-    value: -1,
+    value: 0,
     kind: OptionKind.VIEWER + OptionKind.PREFERENCE,
   },
   scrollModeOnLoad: {

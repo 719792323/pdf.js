@@ -406,6 +406,19 @@ class ViewsManager extends Sidebar {
       }
     });
 
+    // 监听 viewerContainer 的过渡结束，确保page-width等缩放模式正确更新
+    const viewerContainer = document.getElementById("viewerContainer");
+    if (viewerContainer) {
+      viewerContainer.addEventListener("transitionend", evt => {
+        if (evt.target === viewerContainer) {
+          // 过渡结束后延迟触发resize，确保布局完全稳定
+          setTimeout(() => {
+            eventBus.dispatch("resize", { source: this });
+          }, 50);
+        }
+      });
+    }
+
     // Buttons for switching views.
     this.thumbnailButton.addEventListener("click", () => {
       this.switchView(SidebarView.THUMBS);
