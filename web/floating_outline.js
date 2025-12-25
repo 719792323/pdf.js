@@ -203,17 +203,58 @@ class FloatingOutline {
     this.#contextMenu?.classList.add("hidden");
   }
 
+  // 用于检测双击右键的状态
+  #rightClickState = {
+    lastClickTime: 0,
+    pendingToggle: null
+  };
+  #RIGHT_DOUBLE_CLICK_INTERVAL = 200; // 双击间隔
+  #CONTEXT_MENU_DELAY = 220; // 延迟显示书签的时间
+
   /**
-   * PDF区域右键直接切换书签显示/隐藏
+   * PDF区域右键切换书签显示/隐藏
+   * 单击右键：显示/隐藏书签
+   * 双击右键：不处理（由 app.js 处理切换到豆包）
    */
   #onPdfContextMenu(e) {
     // 如果点击在浮动书签面板上，不处理
     if (e.target.closest("#floatingOutlineContainer")) {
       return;
     }
-    e.preventDefault();
-    // 直接切换书签显示/隐藏，在鼠标位置显示
-    this.toggle(e.clientX, e.clientY);
+
+    e.preventDefault(); // 始终阻止默认右键菜单
+
+    const now = Date.now();
+    const mouseX = e.clientX;
+    const mouseY = e.clientY;
+
+    // 检查是否是双击（两次右键点击间隔小于 300ms）
+    if (now - this.#rightClickState.lastClickTime <= this.#RIGHT_DOUBLE_CLICK_INTERVAL) {
+      // 是双击，取消待显示的书签，不做任何操作（让 app.js 处理切换豆包）
+      if (this.#rightClickState.pendingToggle) {
+        clearTimeout(this.#rightClickState.pendingToggle);
+        this.#rightClickState.pendingToggle = null;
+      }
+      this.#rightClickState.lastClickTime = 0; // 重置
+      // 双击右键不显示书签
+      return;
+    }
+
+    // 第一次右键点击，记录时间并延迟判断
+    this.#rightClickState.lastClickTime = now;
+
+    // 取消之前的延迟
+    if (this.#rightClickState.pendingToggle) {
+      clearTimeout(this.#rightClickState.pendingToggle);
+    }
+
+    // 延迟显示书签：如果在延迟时间内没有第二次点击，则认为是单击，显示书签
+    this.#rightClickState.pendingToggle = setTimeout(() => {
+      this.#rightClickState.lastClickTime = 0;
+      this.#rightClickState.pendingToggle = null;
+      // 单击右键：切换书签显示/隐藏
+      this.toggle(mouseX, mouseY);
+    }, this.#CONTEXT_MENU_DELAY);
   }
 
   /**

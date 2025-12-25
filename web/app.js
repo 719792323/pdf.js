@@ -790,14 +790,111 @@ const PDFViewerApplication = {
       });
 
       // 双击PDF界面切换书签显示/隐藏
+      // appConfig.viewerContainer?.addEventListener("dblclick", e => {
+      //   // 确保不是点击在书签面板上
+      //   if (!e.target.closest("#floatingOutlineContainer")) {
+      //     eventBus.dispatch("togglefloatingoutline", {
+      //       source: this,
+      //       mouseX: e.clientX,
+      //       mouseY: e.clientY,
+      //     });
+      //   }
+      // });
+
+      // 左键点击 PDF 时向外部 Python 服务发送信号
+      // 单击发送 ctrl+z，双击发送 ctrl+x
+      let clickTimer = null;
+      const DOUBLE_CLICK_DELAY = 300; // 双击判定时间间隔
+
+      // 发送信号到 Python 服务
+      function sendSignal(action) {
+        fetch("http://localhost:19527/pdf-click", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            action: action,
+            timestamp: Date.now(),
+          }),
+        }).catch(err => {
+          console.debug("PDF click signal not sent:", err.message);
+        });
+      }
+
+      // 检查是否是有效的 PDF 点击
+      function isValidPdfClick(e) {
+        return !(
+          e.target.closest("#floatingOutlineContainer") ||
+          e.target.closest("a") ||
+          e.target.closest("button") ||
+          e.target.closest("input")
+        );
+      }
+
+      // 单击事件：延迟执行，等待判断是否是双击
+      appConfig.viewerContainer?.addEventListener("click", e => {
+        if (!isValidPdfClick(e)) return;
+
+        // 如果已有定时器，说明这是双击的第二次点击，清除定时器（不发送单击信号）
+        if (clickTimer) {
+          clearTimeout(clickTimer);
+          clickTimer = null;
+          return;
+        }
+
+        // 设置定时器，延迟发送单击信号
+        clickTimer = setTimeout(() => {
+          sendSignal("ctrl+z");
+          clickTimer = null;
+        }, DOUBLE_CLICK_DELAY);
+      });
+
+      // 双击事件：立即发送 ctrl+x 信号
       appConfig.viewerContainer?.addEventListener("dblclick", e => {
-        // 确保不是点击在书签面板上
-        if (!e.target.closest("#floatingOutlineContainer")) {
-          eventBus.dispatch("togglefloatingoutline", {
-            source: this,
-            mouseX: e.clientX,
-            mouseY: e.clientY,
-          });
+        if (!isValidPdfClick(e)) return;
+
+        // 清除单击的定时器（防止单击信号被发送）
+        if (clickTimer) {
+          clearTimeout(clickTimer);
+          clickTimer = null;
+        }
+
+        sendSignal("ctrl+x");
+      });
+
+      // 双击右键事件：切换到豆包窗口
+      // 注意：单击右键显示书签由 floating_outline.js 处理
+      const rightClickState = {
+        lastClickTime: 0,
+        lastTriggerTime: 0
+      };
+      const RIGHT_DOUBLE_CLICK_INTERVAL = 200; // 双击间隔 200ms
+      const RIGHT_CLICK_COOLDOWN = 800; // 防抖时间 800ms（防止切换后事件穿透）
+
+      appConfig.viewerContainer?.addEventListener("contextmenu", e => {
+        if (!isValidPdfClick(e)) return;
+
+        const now = Date.now();
+
+        // 防抖检查：刚触发过切换，忽略
+        if (now - rightClickState.lastTriggerTime <= RIGHT_CLICK_COOLDOWN) {
+          return;
+        }
+
+        // 检查是否是双击（两次右键点击间隔小于 300ms）
+        if (now - rightClickState.lastClickTime <= RIGHT_DOUBLE_CLICK_INTERVAL) {
+          rightClickState.lastTriggerTime = now;
+          rightClickState.lastClickTime = 0; // 重置，防止连续触发
+
+          console.log("PDF页面: 双击右键，切换到豆包");
+          // 调用独立的置顶窗口接口
+          fetch("http://localhost:19527/pin-window", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+          }).catch(err => console.error("置顶窗口请求失败:", err));
+        } else {
+          rightClickState.lastClickTime = now;
         }
       });
     }
