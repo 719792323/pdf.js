@@ -802,8 +802,10 @@ const PDFViewerApplication = {
       // });
 
       // 左键点击 PDF 时向外部 Python 服务发送信号
-      // 单击发送 ctrl+z，双击发送 ctrl+x
-      let clickTimer = null;
+      // 长按发送 ctrl+z（按住时发送一次，松开时再发送一次），双击发送 ctrl+x
+      let longPressTimer = null; // 长按检测定时器
+      let isLongPressing = false; // 是否处于长按状态
+      const LONG_PRESS_DELAY = 200; // 长按判定时间（200ms）
       const DOUBLE_CLICK_DELAY = 300; // 双击判定时间间隔
 
       // 发送信号到 Python 服务
@@ -832,35 +834,69 @@ const PDFViewerApplication = {
         );
       }
 
-      // 单击事件：延迟执行，等待判断是否是双击
-      appConfig.viewerContainer?.addEventListener("click", e => {
+      // 左键按下：启动长按检测定时器
+      appConfig.viewerContainer?.addEventListener("mousedown", e => {
+        if (e.button !== 0) return; // 只处理左键
         if (!isValidPdfClick(e)) return;
 
-        // 如果已有定时器，说明这是双击的第二次点击，清除定时器（不发送单击信号）
-        if (clickTimer) {
-          clearTimeout(clickTimer);
-          clickTimer = null;
-          return;
+        // 清除之前的定时器（如果有）
+        if (longPressTimer) {
+          clearTimeout(longPressTimer);
         }
 
-        // 设置定时器，延迟发送单击信号
-        clickTimer = setTimeout(() => {
-          sendSignal("ctrl+z");
-          clickTimer = null;
-        }, DOUBLE_CLICK_DELAY);
+        // 启动长按检测定时器
+        longPressTimer = setTimeout(() => {
+          isLongPressing = true;
+          sendSignal("option+z"); // 长按触发，发送信号
+          console.debug("长按触发，发送信号");
+          longPressTimer = null;
+        }, LONG_PRESS_DELAY);
+      });
+
+      // 左键松开：如果是长按状态，再发送一次信号
+      appConfig.viewerContainer?.addEventListener("mouseup", e => {
+        if (e.button !== 0) return; // 只处理左键
+
+        // 清除长按定时器（如果用户在长按判定时间内松开，不触发长按）
+        if (longPressTimer) {
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
+        }
+
+        // 如果已经处于长按状态，松开时再发送一次信号
+        if (isLongPressing) {
+          sendSignal("option+z");
+          console.debug("长按松开，发送信号");
+          isLongPressing = false;
+        }
+      });
+
+      // 鼠标离开容器时也要处理（防止按住拖出去后不松开）
+      appConfig.viewerContainer?.addEventListener("mouseleave", e => {
+        if (longPressTimer) {
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
+        }
+        if (isLongPressing) {
+          sendSignal("option+z");
+          console.debug("长按松开（鼠标离开），发送信号");
+          isLongPressing = false;
+        }
       });
 
       // 双击事件：立即发送 ctrl+x 信号
       appConfig.viewerContainer?.addEventListener("dblclick", e => {
         if (!isValidPdfClick(e)) return;
 
-        // 清除单击的定时器（防止单击信号被发送）
-        if (clickTimer) {
-          clearTimeout(clickTimer);
-          clickTimer = null;
+        // 清除长按定时器（防止长按信号被发送）
+        if (longPressTimer) {
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
         }
+        // 如果已经触发了长按，重置状态（双击时不应该再触发松开信号）
+        isLongPressing = false;
 
-        sendSignal("ctrl+x");
+        sendSignal("option+x");
       });
 
       // 双击右键事件：切换到豆包窗口
@@ -887,12 +923,8 @@ const PDFViewerApplication = {
           rightClickState.lastTriggerTime = now;
           rightClickState.lastClickTime = 0; // 重置，防止连续触发
 
-          console.log("PDF页面: 双击右键，切换到豆包");
-          // 调用独立的置顶窗口接口
-          fetch("http://localhost:19527/pin-window", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-          }).catch(err => console.error("置顶窗口请求失败:", err));
+          console.log("PDF页面: 双击右键，发送 option+mix 信号");
+          sendSignal("option+mix");
         } else {
           rightClickState.lastClickTime = now;
         }

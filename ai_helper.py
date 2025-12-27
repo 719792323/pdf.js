@@ -8,7 +8,6 @@ import platform
 app = Flask(__name__)
 CORS(app)
 AI_MODEL = "Doubao"
-AI_MODEL_ShortCut_Processor = "Doubao helper"
 
 # 检测操作系统
 IS_WINDOWS = platform.system() == 'Windows'
@@ -224,6 +223,9 @@ def handle_click():
             'ctrl+v': ('v', 'control down'),
             'cmd+z': ('z', 'command down'),
             'cmd+x': ('x', 'command down'),
+            'option+z': ('z', 'option down'),
+            'option+x': ('x', 'option down'),
+            'option+mix': ('mix', 'option down'),
             # 可以继续添加更多映射...
         }
 
@@ -232,22 +234,32 @@ def handle_click():
             return 'Unknown action', 400
 
         key, modifier = key_map[action]
-
-        # 构建 AppleScript
-        script = f'''
-        tell application "System Events"
-            tell process "{AI_MODEL_ShortCut_Processor}"
-                keystroke "{key}" using {modifier}
+        if key == "mix":
+            import time
+            for char, mod in [('c', 'option down'),('z', 'option down'),('u', 'option down')]:
+                script = f'''
+                tell application "System Events"
+                    tell process "{AI_MODEL}"
+                        keystroke "{char}" using {mod}
+                    end tell
+                end tell'''
+                subprocess.run(['osascript', '-e', script], capture_output=True, text=True)
+                time.sleep(0.5)  # 每个按键之间延时300毫秒
+        else:
+            # 构建 AppleScript
+            script = f'''
+            tell application "System Events"
+                tell process "{AI_MODEL}"
+                    keystroke "{key}" using {modifier}
+                end tell
             end tell
-        end tell
-        '''
-
-        # 执行并捕获结果
-        result = subprocess.run(
-            ['osascript', '-e', script],
-            capture_output=True,
-            text=True
-        )
+            '''
+            # 执行并捕获结果
+            result = subprocess.run(
+                ['osascript', '-e', script],
+                capture_output=True,
+                text=True
+            )
 
     return 'OK'
 

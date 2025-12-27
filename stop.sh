@@ -24,7 +24,7 @@ if [ -f "$PID_FILE" ]; then
 fi
 
 # 方法2: 通过端口强制关闭 (确保 Flask 完全关闭)
-# 关闭占用 19527 端口的进程 (doubao_helper.py)
+# 关闭占用 19527 端口的进程 (ai_helper.py)
 FLASK_PIDS=$(lsof -ti:19527 2>/dev/null)
 if [ -n "$FLASK_PIDS" ]; then
     echo "$FLASK_PIDS" | xargs kill -9 2>/dev/null

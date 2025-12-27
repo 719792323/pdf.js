@@ -9,7 +9,7 @@ GULP_PID=$!
 echo "gulp_pid=$GULP_PID" > "$PID_FILE"
 
 # 启动 python 脚本并记录 PID
-python doubao_helper.py &
+python ai_helper.py &
 PYTHON_PID=$!
 echo "python_pid=$PYTHON_PID" >> "$PID_FILE"
 
