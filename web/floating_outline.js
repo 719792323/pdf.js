@@ -203,58 +203,22 @@ class FloatingOutline {
     this.#contextMenu?.classList.add("hidden");
   }
 
-  // 用于检测双击右键的状态
-  #rightClickState = {
-    lastClickTime: 0,
-    pendingToggle: null
-  };
-  #RIGHT_DOUBLE_CLICK_INTERVAL = 200; // 双击间隔
-  #CONTEXT_MENU_DELAY = 220; // 延迟显示书签的时间
-
   /**
-   * PDF区域右键切换书签显示/隐藏
-   * 单击右键：显示/隐藏书签
-   * 双击右键：不处理（由 app.js 处理切换到豆包）
+   * PDF区域右键切换书签显示/隐藏（单击直接触发，无延迟）
    */
   #onPdfContextMenu(e) {
-    // 如果点击在浮动书签面板上，不处理
-    if (e.target.closest("#floatingOutlineContainer")) {
+    // 如果点击在浮动书签面板上或悬浮球上，不处理
+    if (e.target.closest("#floatingOutlineContainer") || e.target.closest("#floatingActionBall")) {
       return;
     }
 
-    e.preventDefault(); // 始终阻止默认右键菜单
+    e.preventDefault(); // 阻止默认右键菜单
 
-    const now = Date.now();
     const mouseX = e.clientX;
     const mouseY = e.clientY;
 
-    // 检查是否是双击（两次右键点击间隔小于 300ms）
-    if (now - this.#rightClickState.lastClickTime <= this.#RIGHT_DOUBLE_CLICK_INTERVAL) {
-      // 是双击，取消待显示的书签，不做任何操作（让 app.js 处理切换豆包）
-      if (this.#rightClickState.pendingToggle) {
-        clearTimeout(this.#rightClickState.pendingToggle);
-        this.#rightClickState.pendingToggle = null;
-      }
-      this.#rightClickState.lastClickTime = 0; // 重置
-      // 双击右键不显示书签
-      return;
-    }
-
-    // 第一次右键点击，记录时间并延迟判断
-    this.#rightClickState.lastClickTime = now;
-
-    // 取消之前的延迟
-    if (this.#rightClickState.pendingToggle) {
-      clearTimeout(this.#rightClickState.pendingToggle);
-    }
-
-    // 延迟显示书签：如果在延迟时间内没有第二次点击，则认为是单击，显示书签
-    this.#rightClickState.pendingToggle = setTimeout(() => {
-      this.#rightClickState.lastClickTime = 0;
-      this.#rightClickState.pendingToggle = null;
-      // 单击右键：切换书签显示/隐藏
-      this.toggle(mouseX, mouseY);
-    }, this.#CONTEXT_MENU_DELAY);
+    // 单击右键直接切换书签显示/隐藏
+    this.toggle(mouseX, mouseY);
   }
 
   /**
@@ -571,4 +535,156 @@ class FloatingOutline {
   }
 }
 
-export { FloatingOutline };
+
+/**
+ * 悬浮球类
+ * 可自由拖动的悬浮球，点击触发 Chrome/豆包 互切（原双击右键功能）
+ */
+class FloatingActionBall {
+  #ball = null;
+  #isDragging = false;
+  #startX = 0;
+  #startY = 0;
+  #startLeft = 0;
+  #startTop = 0;
+  #hasMoved = false; // 区分点击和拖拽
+  #MOVE_THRESHOLD = 5; // 移动超过5px才算拖拽
+
+  constructor() {
+    this.#ball = document.getElementById("floatingActionBall");
+    if (!this.#ball) return;
+
+    this.#setupEventListeners();
+    this.#loadPosition();
+  }
+
+  /**
+   * 设置事件监听
+   */
+  #setupEventListeners() {
+    // 鼠标按下：开始拖拽
+    this.#ball.addEventListener("mousedown", this.#onMouseDown.bind(this));
+    // 全局鼠标移动和松开
+    document.addEventListener("mousemove", this.#onMouseMove.bind(this));
+    document.addEventListener("mouseup", this.#onMouseUp.bind(this));
+    // 阻止右键菜单
+    this.#ball.addEventListener("contextmenu", e => e.preventDefault());
+  }
+
+  /**
+   * 鼠标按下
+   */
+  #onMouseDown(e) {
+    if (e.button !== 0) return; // 只处理左键
+    this.#isDragging = true;
+    this.#hasMoved = false;
+    this.#startX = e.clientX;
+    this.#startY = e.clientY;
+    this.#startLeft = this.#ball.offsetLeft;
+    this.#startTop = this.#ball.offsetTop;
+    this.#ball.classList.add("dragging");
+    e.preventDefault();
+  }
+
+  /**
+   * 鼠标移动
+   */
+  #onMouseMove(e) {
+    if (!this.#isDragging) return;
+
+    const dx = e.clientX - this.#startX;
+    const dy = e.clientY - this.#startY;
+
+    // 判断是否超过移动阈值
+    if (!this.#hasMoved && (Math.abs(dx) > this.#MOVE_THRESHOLD || Math.abs(dy) > this.#MOVE_THRESHOLD)) {
+      this.#hasMoved = true;
+    }
+
+    if (this.#hasMoved) {
+      const ballSize = this.#ball.offsetWidth;
+      let newLeft = this.#startLeft + dx;
+      let newTop = this.#startTop + dy;
+
+      // 限制在视口内
+      newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - ballSize));
+      newTop = Math.max(0, Math.min(newTop, window.innerHeight - ballSize));
+
+      this.#ball.style.left = `${newLeft}px`;
+      this.#ball.style.top = `${newTop}px`;
+    }
+  }
+
+  /**
+   * 鼠标松开
+   */
+  #onMouseUp(e) {
+    if (!this.#isDragging) return;
+    this.#isDragging = false;
+    this.#ball.classList.remove("dragging");
+
+    if (this.#hasMoved) {
+      // 是拖拽，保存位置
+      this.#savePosition();
+    } else {
+      // 是点击，触发切换功能
+      this.#onClick();
+    }
+  }
+
+  /**
+   * 点击悬浮球：发送 option+mix 信号切换 Chrome/豆包
+   */
+  #onClick() {
+    // 添加点击动画
+    this.#ball.classList.add("clicked");
+    setTimeout(() => {
+      this.#ball.classList.remove("clicked");
+    }, 300);
+
+    // 发送信号
+    fetch("http://localhost:19527/pdf-click", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "option+mix", timestamp: Date.now() }),
+    }).catch(err => {
+      console.debug("悬浮球信号发送失败:", err.message);
+    });
+
+    console.log("悬浮球: 发送 option+mix 信号");
+  }
+
+  /**
+   * 保存悬浮球位置到 localStorage
+   */
+  #savePosition() {
+    try {
+      localStorage.setItem("floatingBallPos", JSON.stringify({
+        left: this.#ball.offsetLeft,
+        top: this.#ball.offsetTop,
+      }));
+    } catch (e) {
+      // 忽略
+    }
+  }
+
+  /**
+   * 从 localStorage 加载悬浮球位置
+   */
+  #loadPosition() {
+    try {
+      const pos = JSON.parse(localStorage.getItem("floatingBallPos"));
+      if (pos && typeof pos.left === "number" && typeof pos.top === "number") {
+        // 确保在视口范围内
+        const ballSize = this.#ball.offsetWidth || 48;
+        const left = Math.max(0, Math.min(pos.left, window.innerWidth - ballSize));
+        const top = Math.max(0, Math.min(pos.top, window.innerHeight - ballSize));
+        this.#ball.style.left = `${left}px`;
+        this.#ball.style.top = `${top}px`;
+      }
+    } catch (e) {
+      // 忽略，使用 CSS 默认位置
+    }
+  }
+}
+
+export { FloatingOutline, FloatingActionBall };

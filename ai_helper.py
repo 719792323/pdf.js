@@ -39,7 +39,7 @@ try:
         'last_right_click_time': 0,  # 上次右键点击时间
         'last_trigger_time': 0,  # 上次触发切换的时间
         'last_switch_to_ai_time': 0,  # 上次从 PDF 切换到ai的时间
-        'previous_app': ''  # 记录上一次的前台应用
+        'previous_app': '',  # 记录上一次的前台应用
     }
 
     # 双击间隔和防抖时间
@@ -110,6 +110,21 @@ try:
                 print(f"切换到AI失败: {e}")
         else:  # macOS
             subprocess.run(['open', '-a', AI_MODEL])
+
+
+    def toggle_ai_chrome():
+        """Chrome 和豆包之间互相切换，类似 Command+Tab"""
+        frontmost_app = get_frontmost_app()
+        print(f"切换逻辑: 当前前台应用 = {frontmost_app}")
+
+        if AI_MODEL.lower() in frontmost_app.lower():
+            # 豆包在前台 → 切到 Chrome
+            print("豆包在前台，切换到 Chrome")
+            switch_to_chrome()
+        else:
+            # Chrome 或其他应用在前台 → 切到豆包
+            print("Chrome 在前台，切换到豆包")
+            switch_to_ai()
 
 
     def check_right_double_click():
@@ -226,6 +241,7 @@ def handle_click():
             'option+z': ('z', 'option down'),
             'option+x': ('x', 'option down'),
             'option+mix': ('mix', 'option down'),
+            # 'toggle-ai': (None, None)
             # 可以继续添加更多映射...
         }
 
@@ -233,10 +249,15 @@ def handle_click():
             print(f"未知的 action: {action}")
             return 'Unknown action', 400
 
+        # 特殊处理：Chrome 和豆包互切
+        if action == 'option+mix':
+            toggle_ai_chrome()
+            return 'OK'
+
         key, modifier = key_map[action]
         if key == "mix":
             import time
-            for char, mod in [('c', 'option down'),('z', 'option down'),('u', 'option down')]:
+            for char, mod in [('c', 'option down'), ('z', 'option down'), ('u', 'option down')]:
                 script = f'''
                 tell application "System Events"
                     tell process "{AI_MODEL}"

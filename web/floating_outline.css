@@ -338,3 +338,72 @@
     border-radius: 1px;
   }
 }
+
+/* ============== 悬浮球样式 ============== */
+#floatingActionBall {
+  position: fixed;
+  z-index: 10002;
+  right: 24px;
+  top: 50%;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow:
+    0 4px 15px rgba(102, 126, 234, 0.4),
+    0 2px 6px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
+  user-select: none;
+  opacity: 0.8;
+
+  &:hover {
+    opacity: 1;
+    transform: scale(1.1);
+    box-shadow:
+      0 6px 20px rgba(102, 126, 234, 0.5),
+      0 3px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  &.dragging {
+    opacity: 1;
+    transform: scale(1.15);
+    box-shadow:
+      0 8px 25px rgba(102, 126, 234, 0.6),
+      0 4px 10px rgba(0, 0, 0, 0.25);
+    cursor: grabbing;
+    transition: none; /* 拖拽时禁用过渡动画 */
+  }
+
+  &.clicked {
+    animation: ballClick 0.3s ease;
+  }
+
+  svg {
+    width: 22px;
+    height: 22px;
+    color: #fff;
+    pointer-events: none;
+  }
+}
+
+@keyframes ballClick {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(0.85);
+  }
+  70% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}

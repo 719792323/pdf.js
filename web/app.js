@@ -91,7 +91,7 @@ import { PDFScriptingManager } from "./pdf_scripting_manager.js";
 import { PdfTextExtractor } from "./pdf_text_extractor.js";
 import { PDFThumbnailViewer } from "web-pdf_thumbnail_viewer";
 import { PDFViewer } from "./pdf_viewer.js";
-import { FloatingOutline } from "./floating_outline.js";
+import { FloatingOutline, FloatingActionBall } from "./floating_outline.js";
 import { Preferences } from "web-preferences";
 import { SecondaryToolbar } from "web-secondary_toolbar";
 import { SignatureManager } from "web-signature_manager";
@@ -789,6 +789,9 @@ const PDFViewerApplication = {
         followMouseToggleButton: document.getElementById("outlineFollowMouseToggle"),
       });
 
+      // 初始化悬浮球
+      this.floatingActionBall = new FloatingActionBall();
+
       // 双击PDF界面切换书签显示/隐藏
       // appConfig.viewerContainer?.addEventListener("dblclick", e => {
       //   // 确保不是点击在书签面板上
@@ -899,36 +902,6 @@ const PDFViewerApplication = {
         sendSignal("option+x");
       });
 
-      // 双击右键事件：切换到豆包窗口
-      // 注意：单击右键显示书签由 floating_outline.js 处理
-      const rightClickState = {
-        lastClickTime: 0,
-        lastTriggerTime: 0
-      };
-      const RIGHT_DOUBLE_CLICK_INTERVAL = 200; // 双击间隔 200ms
-      const RIGHT_CLICK_COOLDOWN = 800; // 防抖时间 800ms（防止切换后事件穿透）
-
-      appConfig.viewerContainer?.addEventListener("contextmenu", e => {
-        if (!isValidPdfClick(e)) return;
-
-        const now = Date.now();
-
-        // 防抖检查：刚触发过切换，忽略
-        if (now - rightClickState.lastTriggerTime <= RIGHT_CLICK_COOLDOWN) {
-          return;
-        }
-
-        // 检查是否是双击（两次右键点击间隔小于 300ms）
-        if (now - rightClickState.lastClickTime <= RIGHT_DOUBLE_CLICK_INTERVAL) {
-          rightClickState.lastTriggerTime = now;
-          rightClickState.lastClickTime = 0; // 重置，防止连续触发
-
-          console.log("PDF页面: 双击右键，发送 option+mix 信号");
-          sendSignal("option+mix");
-        } else {
-          rightClickState.lastClickTime = now;
-        }
-      });
     }
   },
 
